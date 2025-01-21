@@ -1,8 +1,8 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumberString,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -18,30 +18,41 @@ export class UserDto {
   @ApiProperty({ required: true })
   @Transform(({ value }) => value.trim())
   email: string;
+
   @IsOptional()
+  @IsString()
   @ApiProperty({ required: false })
   firstName: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  lastName: string;
+
   @ApiProperty({
     default: 'Lviv',
     required: false,
     description: 'User city',
     example: 'Poltava',
   })
+  @IsOptional()
   @IsCityAllowed({
     groups: ['Lviv', 'Odessa', 'Kharkiv'],
     message: 'City is not allowed',
   })
   city: string;
-  @ApiProperty()
-  password: string;
-  @IsNumberString()
-  @ApiProperty()
-  age: string;
-}
 
-export class PersonalDto {
-  dateBirth: string;
-  lang: string;
+  @IsString()
+  @Matches(/^\S*(?=\S{8,})(?=\S*[A-Z])(?=\S*[\d])\S*$/, {
+    message: 'Password must have 1 upper case',
+  })
+  @IsNotEmpty()
+  password: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  age: number;
 }
 
 export class ForgotPassword {
@@ -51,20 +62,22 @@ export class ForgotPassword {
     message: 'Password must have 1 upper case',
   })
   password: string;
+
   @IsNotEmpty()
   @Match('password', { message: 'Password must match' })
   repeatPassword: string;
 }
 
-export class AccountResponseDto extends IntersectionType(UserDto, PersonalDto) {
+export class AccountResponseDto extends UserDto {
   @ApiProperty()
   status: boolean;
 }
 
-export class UserQueryDto {
+export class SingUpDto {
   @ApiProperty()
-  limit: string;
+  id: string;
   @ApiProperty()
-  sort: string;
-  page: string;
+  email: string;
+  @ApiProperty()
+  createdAt: Date;
 }
