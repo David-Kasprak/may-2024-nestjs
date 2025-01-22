@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-// import { CreateAuthDto } from './dto/create-auth.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UpdateAuthDto } from './dto/update-auth.dto';
-import { ForgotPassword, UserDto } from '../user/dto/user.dto';
+import { ForgotPassword, SingUpDto, UserDto } from '../user/dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../database/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -14,22 +13,27 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async signUpUser(data: UserDto) {
-    // const password = await bcrypt.hash(data.password, 10);
-    // const user = await this.userRepository.create({
-    //   ...data,
-    //   password,
-    // });
-    // user.save();
-    // return {
-    //   id: user.id,
-    //   email: user.email,
-    //   createdAt: user.created,
-    // };
-    return true;
+  async singUpUser(data: UserDto): Promise<SingUpDto> {
+    const findUser = await this.userRepository.findOne({
+      where: { email: data.email },
+    });
+    if (findUser) {
+      throw new BadRequestException('User with this email already exist.');
+    }
+    const password = await bcrypt.hash(data.password, 10);
+    const user: User = await this.userRepository.save(
+      this.userRepository.create({ ...data, password }),
+    );
+    return {
+      id: user.id,
+      email: user.email,
+      createdAt: user.createdAt,
+    };
   }
 
   create(data: ForgotPassword) {
+    if (data.password !== data.repeatPassword) {
+    }
     return 'This action adds a new auth';
   }
 
