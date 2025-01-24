@@ -16,12 +16,11 @@ export class PostService {
       const post = await this.postRepository.save(
         this.postRepository.create({
           ...data,
-          user_id: '31c3b9b1-934a-4bbb-8039-7241f4852f17',
+          user_id: '886ecc01-6c01-4933-86bd-a8b56228d4cb',
         }),
       );
       return post;
     } catch (err) {
-      this.logger.error(err);
       throw new BadRequestException('Creat post failed.');
     }
   }
