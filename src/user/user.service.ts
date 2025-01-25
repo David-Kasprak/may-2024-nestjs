@@ -23,33 +23,47 @@ export class UserService {
     return this.usersList[0];
   }
 
-  async findAll(query?: BaseQueryDto): Promise<PaginatedDto<UserItemDto>> {
+  async findAll(query?: BaseQueryDto): Promise<any> {
     const options = {
       page: +query?.page || 1,
       limit: +query?.limit || 10,
     };
-    const queryBuilder = await this.userRepository.createQueryBuilder('user');
+    const queryBuilder = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.posts', 'post')
+      .where('"isActive" = false')
+      .skip((options.page - 1) * options.limit)
+      .take(options.limit);
 
-    // const select = 'email, "firstName", age, id, "createdAt"';
+    // // const select = 'email, "firstName", age, id, "createdAt"';
+    //
+    // queryBuilder
+    //   .select('email, "firstName", age, id, "createdAt"')
+    //   .where({ isActive: false });
+    //
+    // if (query.search) {
+    //   queryBuilder.andWhere(`LOWER("firstName") LIKE '%${query.search}%'`);
+    // }
+    //
+    // const [pagination, rawEntities] = await paginateRawAndEntities(
+    //   queryBuilder,
+    //   options,
+    // );
+    //
+    // return {
+    //   page: pagination.meta.currentPage,
+    //   pages: pagination.meta.totalPages,
+    //   countItems: pagination.meta.totalItems,
+    //   entities: rawEntities as [UserItemDto],
+    // };
 
-    queryBuilder
-      .select('email, "firstName", age, id, "createdAt"')
-      .where({ isActive: false });
-
-    if (query.search) {
-      queryBuilder.andWhere(`LOWER("firstName") LIKE '%${query.search}%'`);
-    }
-
-    const [pagination, rawEntities] = await paginateRawAndEntities(
-      queryBuilder,
-      options,
-    );
+    const count = await queryBuilder.getCount();
 
     return {
-      page: pagination.meta.currentPage,
-      pages: pagination.meta.totalPages,
-      countItems: pagination.meta.totalItems,
-      entities: rawEntities as [UserItemDto],
+      page: options.page,
+      pages: Math.ceil(count / options.limit),
+      countItems: count,
+      entities: await queryBuilder.getMany(),
     };
   }
 
