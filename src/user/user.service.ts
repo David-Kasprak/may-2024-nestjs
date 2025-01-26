@@ -28,12 +28,17 @@ export class UserService {
       page: +query?.page || 1,
       limit: +query?.limit || 10,
     };
-    const queryBuilder = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.posts', 'post')
-      .where('"isActive" = false')
-      .skip((options.page - 1) * options.limit)
-      .take(options.limit);
+
+    // PAGINATION OPTION #1 -------------------------------
+
+    // const queryBuilder = await this.userRepository
+    //   .createQueryBuilder('user')
+    //   .leftJoinAndSelect('user.posts', 'post')
+    //   .where('"isActive" = false')
+    //   .skip((options.page - 1) * options.limit)
+    //   .take(options.limit);
+
+    // const count = await queryBuilder.getCount();
 
     // // const select = 'email, "firstName", age, id, "createdAt"';
     //
@@ -57,13 +62,27 @@ export class UserService {
     //   entities: rawEntities as [UserItemDto],
     // };
 
-    const count = await queryBuilder.getCount();
+    // PAGINATION OPTION #2 --------------------------------
+
+    const [entities, total] = await this.userRepository.findAndCount({
+      where: { isActive: false },
+      select: {
+        email: true,
+        firstName: true,
+        id: true,
+      },
+      relations: {
+        posts: true,
+      },
+      skip: (options.page - 1) * options.limit,
+      take: options.limit,
+    });
 
     return {
       page: options.page,
-      pages: Math.ceil(count / options.limit),
-      countItems: count,
-      entities: await queryBuilder.getMany(),
+      pages: Math.ceil(total / options.limit),
+      countItems: total,
+      entities: entities,
     };
   }
 
