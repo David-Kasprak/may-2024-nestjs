@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { UserDto, UserItemDto } from './dto/user.dto';
+import { UserDto } from './dto/user.dto';
 import { BaseQueryDto } from '../common/validator/base.query.validator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../database/entities/user.entity';
 import { Repository } from 'typeorm';
-import { paginateRawAndEntities } from 'nestjs-typeorm-paginate';
-import { PaginatedDto } from '../common/interface/response.interface';
 import { PATH_TO_IMAGE } from '../common/utils/upload.utils';
 import * as fs from 'node:fs';
+import { SocketGateway } from '../socket/socket.gateway';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly socket: SocketGateway,
   ) {}
   private usersList = [];
   async create(createUserDto: UserDto) {
@@ -96,14 +96,19 @@ export class UserService {
     return this.usersList.find((user) => user.id == id);
   }
 
-  updateOne(id: number, body?: any) {
+  async updateOne(id: number, body?: any, user?: any) {
     //Actually deleting image, not updating anything
-    try {
-      fs.unlinkSync(`./upload/1424360614578773.png`);
-    } catch (err) {
-      console.log(err);
+    // try {
+    //   fs.unlinkSync(`./upload/1424360614578773.png`);
+    // } catch (err) {
+    //   console.log(err);
+    // }
+    if (user) {
+      await this.socket.sendMessage(user.id, 'new-message', {
+        message: 'Hello',
+      });
     }
-    return this.usersList.find((user) => user.id == id);
+    return true;
   }
 
   update(id: number) {

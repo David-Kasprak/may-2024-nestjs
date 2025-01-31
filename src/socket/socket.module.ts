@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { SocketGateway } from './socket.gateway';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [],
-  providers: [],
-  exports: [],
+  imports: [AuthModule],
+  providers: [SocketGateway],
+  exports: [SocketGateway],
 })
 export class SocketModule {}

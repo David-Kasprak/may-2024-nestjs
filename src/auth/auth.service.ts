@@ -113,6 +113,7 @@ export class AuthService {
       return this.jwtService.verifyAsync(token);
     } catch (e) {
       console.log(e);
+      return null;
     }
   }
 
